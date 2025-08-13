@@ -10,7 +10,8 @@
       --bg-solid: #f8fafc;
       --fg:#1e293b;
       --muted:#64748b;
-      --accent:#3b82f6;
+      --accent:#92bbd9;
+      --accent-alt:#7597af;
       --danger:#ef4444;
       --warning:#f59e0b;
       --ok:#10b981;
@@ -198,7 +199,7 @@
     }
     
     .primary{ 
-      background: linear-gradient(135deg, var(--accent) 0%, #1d4ed8 100%); 
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-alt) 100%); 
       color: white;
       box-shadow: var(--shadow-lg);
     }
@@ -536,9 +537,10 @@
 
       function format(ms){
         const {h,m,s} = msToParts(ms);
+        const hh = String(h).padStart(2,'0');
         const mm = String(m).padStart(2,'0');
         const ss = String(s).padStart(2,'0');
-        return h>0 ? `${h}:${mm}:${ss}` : `${m}:${ss}`.replace(/^([0-9]):/,(m)=>'0'+m);
+        return `${hh}:${mm}:${ss}`;
       }
 
       function updateDisplay(){
@@ -570,7 +572,7 @@
         if(lastTick==null) lastTick = now;
         const delta = now - lastTick;
         lastTick = now;
-        remainingMs -= delta*20;
+        remainingMs -= delta;
         if(remainingMs <= 0){
           remainingMs = 0; updateDisplay(); finish(); return;
         }
