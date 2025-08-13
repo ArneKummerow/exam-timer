@@ -470,6 +470,15 @@
           <div class="value" id="endTimeValue">--:--:--</div>
         </div>
       </div>
+      <div id="announcementContainer">
+        <div
+          id="announcementText"
+          class="announcement-text"
+          contenteditable="true"
+          aria-label="Announcement text (editable)"
+          tabindex="0"
+        >Good luck!</div>
+      </div>
       <div class="status">
         <span class="badge" id="toiletBadge" aria-live="polite" aria-atomic="true">
           <span class="dot" aria-hidden="true"></span>
@@ -480,15 +489,6 @@
         </span>
       </div>
       <div class="warning-text" id="warningBottom">... or you will be excluded!</div>
-      <div id="announcementContainer">
-        <div
-          id="announcementText"
-          class="announcement-text"
-          contenteditable="true"
-          aria-label="Announcement text (editable)"
-          tabindex="0"
-        >Good luck!</div>
-      </div>
 
     </section>
   </main>
@@ -832,13 +832,17 @@
       confirmResetBtn.addEventListener('click', ()=>{ closeModal(); stop(); });
 
       // Keyboard shortcuts: Space=start/pause, T=toilet, R=reset
+      function isAnnouncementActive() {
+        const ann = document.getElementById('announcementText');
+        return document.activeElement === ann || (ann && ann.contains(document.activeElement));
+      }
       window.addEventListener('keydown', (e)=>{
         if(modal.getAttribute('aria-hidden') === 'false'){
           if(e.key === 'Escape'){ e.preventDefault(); closeModal(); }
           if(e.key === 'Enter'){ e.preventDefault(); confirmResetBtn.click(); }
           return;
         }
-        if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){
+        if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName) || isAnnouncementActive()){
           return;
         }
         if(e.key===' '){ e.preventDefault(); toggle(); }
