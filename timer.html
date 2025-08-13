@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Exam Projector Timer</title>
+  <style>
+    :root{
+      --bg: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+      --bg-solid: #f8fafc;
+      --fg:#1e293b;
+      --muted:#64748b;
+      --accent:#3b82f6;
+      --danger:#ef4444;
+      --warning:#f59e0b;
+      --ok:#10b981;
+      --surface: rgba(255, 255, 255, 0.95);
+      --surface-elevated: rgba(255, 255, 255, 0.98);
+      --button: rgba(255, 255, 255, 0.9);
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      --border-radius: 12px;
+      --border-radius-lg: 16px;
+    }
+    
+    html,body{height:100%}
+    body{
+      margin:0; 
+      background: var(--bg); 
+      color: var(--fg); 
+      font: 16px/1.6 'Inter', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif;
+      display:grid; 
+      grid-template-rows: 1fr auto; 
+      gap:16px;
+      min-height: 100vh;
+    }
+    
+    .container{
+      display:grid; 
+      place-items:center; 
+      padding:24px 16px;
+    }
+
+    .main{
+      display:flex; 
+      flex-direction:column; 
+      align-items:center; 
+      justify-content:center; 
+      gap:24px; 
+      text-align:center;
+      width: min(100%, 1400px);
+    }
+
+    .time{
+      font-size: clamp(160px, 14vw, 240px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 0.9;
+      padding: 24px 32px;
+      border-radius: var(--border-radius-lg);
+      background: var(--surface-elevated);
+      box-shadow: var(--shadow-lg);
+      font-variant-numeric: tabular-nums lining-nums;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .time::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+    }
+
+    .status{
+      display:flex; 
+      align-items:center; 
+      gap:16px; 
+      font-size: clamp(18px, 3.2vw, 28px); 
+      color: var(--muted);
+      margin-top: -8px;
+    }
+
+    .badge{ 
+      display:inline-flex; 
+      align-items:center; 
+      gap:12px; 
+      padding: 12px 20px; 
+      border-radius: 50px; 
+      background: var(--surface); 
+      box-shadow: var(--shadow); 
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
+    }
+    
+    .badge:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .dot{ 
+      width:16px; 
+      height:16px; 
+      border-radius:50%; 
+      background: var(--ok);
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+      transition: all 0.3s ease;
+    }
+    .badge.occupied .dot{ 
+      background: var(--danger); 
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+    }
+    .badge.occupied .label{ 
+      color: var(--danger); 
+      font-weight: 700; 
+    }
+
+    .controls{
+      position:sticky; 
+      bottom:0; 
+      background: linear-gradient(180deg, transparent 0%, var(--bg-solid) 20%, var(--bg-solid) 100%);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
+      padding: 16px; 
+      display:flex; 
+      justify-content:center;
+    }
+
+    .controls-inner{ 
+      width:min(1200px, 100%); 
+      display:flex; 
+      justify-content:space-between; 
+      align-items:center; 
+      gap:16px; 
+      position:relative; 
+    }
+
+    .panel{ 
+      background: var(--surface-elevated); 
+      border: 1px solid rgba(0, 0, 0, 0.08); 
+      border-radius: var(--border-radius); 
+      padding: 10px; 
+      display:flex; 
+      align-items:center; 
+      gap:8px; 
+      box-shadow: var(--shadow); 
+      min-height:48px;
+      backdrop-filter: blur(20px);
+    }
+
+    button, .btn{
+      -webkit-tap-highlight-color: transparent;
+      cursor:pointer; 
+      border:none; 
+      background: var(--button); 
+      color: var(--fg);
+      padding: 8px 14px; 
+      border-radius: 10px; 
+      font-weight: 600; 
+      font-size: 14px; 
+      box-shadow: var(--shadow);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      transition: left 0.5s;
+    }
+    
+    button:hover::before {
+      left: 100%;
+    }
+    
+    button:hover{ 
+      transform: translateY(-1px) scale(1.01);
+      box-shadow: var(--shadow-lg);
+    }
+    button:active{ 
+      transform: translateY(0) scale(0.98);
+      transition: all 0.1s ease;
+    }
+    
+    .primary{ 
+      background: linear-gradient(135deg, var(--accent) 0%, #1d4ed8 100%); 
+      color: white;
+      box-shadow: var(--shadow-lg);
+    }
+    .primary:hover {
+      box-shadow: var(--shadow-xl);
+    }
+    
+    .danger{ 
+      background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%); 
+      color: white; 
+    }
+    
+    .quiet{ 
+      background: var(--surface); 
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .input{ 
+      display:inline-flex; 
+      align-items:center; 
+      gap:6px; 
+      background: var(--button); 
+      padding: 8px 10px; 
+      border-radius: 10px; 
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      backdrop-filter: blur(10px);
+      transition: all 0.2s ease;
+    }
+    
+    .input:focus-within {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-1px);
+    }
+    
+    .input input{ 
+      width: 44px; 
+      border:none; 
+      outline:none; 
+      background: transparent; 
+      font-size:15px; 
+      font-weight:600; 
+      text-align:right;
+      color: var(--fg);
+    }
+    
+    .suffix{ 
+      color: var(--muted); 
+      font-weight:600; 
+      font-size: 14px;
+    }
+
+    /* Keyboard shortcut indicators */
+    .btn-with-shortcut {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 2px 4px;
+      font-size: 9px;
+      font-weight: 700;
+      line-height: 1;
+      background: rgba(0,0,0,0.1);
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 4px;
+      font-family: ui-monospace, 'SF Mono', 'Cascadia Code', 'Source Code Pro', Menlo, Monaco, Consolas, monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .primary .kbd {
+      background: rgba(255,255,255,0.25);
+      border-color: rgba(255,255,255,0.4);
+      color: rgba(255,255,255,0.9);
+    }
+
+    .center-controls{ 
+      position:absolute; 
+      left:50%; 
+      transform:translateX(-50%); 
+      display:flex; 
+      gap:12px; 
+      align-items:center; 
+    }
+
+    /* Modal */
+    .modal-backdrop{ 
+      display:none; 
+      position:fixed; 
+      inset:0; 
+      background:rgba(0,0,0,.6); 
+      align-items:center; 
+      justify-content:center; 
+      z-index:9999;
+      backdrop-filter: blur(8px);
+    }
+    .modal{ 
+      background: var(--surface-elevated); 
+      border-radius: var(--border-radius); 
+      padding:24px; 
+      max-width:420px; 
+      width:94%; 
+      box-shadow: var(--shadow-xl);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(20px);
+    }
+    .modal h3{ 
+      margin:0 0 12px 0; 
+      font-size:20px; 
+      font-weight: 700;
+      color: var(--fg);
+    }
+    .modal p{ 
+      margin:0 0 20px 0; 
+      color: var(--muted); 
+      line-height: 1.6;
+    }
+    .modal .row{ 
+      display:flex; 
+      gap:12px; 
+      justify-content:flex-end; 
+    }
+
+    /* Flash at end */
+    .flash{ animation: flash 600ms steps(2, jump-none) infinite; }
+    @keyframes flash{ to { color: var(--danger); text-shadow: 0 0 20px rgba(239, 68, 68, 0.5); } }
+
+    /* Warning text */
+    .warning-text {
+      font-size: clamp(64px, 2.8vw, 88px);
+      font-weight: 800;
+      text-align: center;
+      animation: colorPulse 2s infinite ease-in-out;
+      padding: 16px;
+      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    @keyframes colorPulse {
+      0%   { color: var(--danger); text-shadow: 0 0 30px rgba(239, 68, 68, 0.4); }
+      50%  { color: var(--fg); text-shadow: 0 2px 20px rgba(0, 0, 0, 0.1); }
+      100% { color: var(--danger); text-shadow: 0 0 30px rgba(239, 68, 68, 0.4); }
+    }
+    
+    /* Hide warning when timer started */
+    .hide-warning .warning-text {
+      display: none;
+    }
+    
+    /* Show start message when timer just started */
+    .show-start-message .warning-text {
+      display: block;
+      animation: startMessagePulse 1.5s infinite ease-in-out;
+    }
+    
+    @keyframes startMessagePulse {
+      0%   { color: var(--ok); text-shadow: 0 0 30px rgba(16, 185, 129, 0.5); }
+      50%  { color: var(--fg); text-shadow: 0 2px 20px rgba(0, 0, 0, 0.1); }
+      100% { color: var(--ok); text-shadow: 0 0 30px rgba(16, 185, 129, 0.5); }
+    }
+
+    /* Hide duration controls when running */
+    .hide-duration-controls #leftPanel {
+      display: none;
+    }
+    
+    /* Keep right panel on the right when duration controls are hidden */
+    .hide-duration-controls .controls-inner {
+      justify-content: flex-end;
+    }
+
+    @media (max-width:720px){
+      .controls-inner{ 
+        flex-direction:column; 
+        gap:16px; 
+        align-items:stretch; 
+      }
+      .center-controls{ 
+        position:static; 
+        transform:none; 
+        justify-content:center; 
+      }
+      .panel{ 
+        justify-content:center; 
+      }
+      
+      .time {
+        font-size: clamp(120px, 20vw, 200px);
+        padding: 20px 24px;
+      }
+      
+      .warning-text {
+        font-size: clamp(48px, 8vw, 72px);
+      }
+      
+      .controls {
+        padding: 16px;
+      }
+      
+      .main {
+        gap: 24px;
+      }
+      
+      .container {
+        padding: 24px 16px;
+      }
+    }
+    
+    @media (max-width:480px){
+      .btn-with-shortcut {
+        flex-direction: column;
+        gap: 4px;
+        text-align: center;
+      }
+      
+      .kbd {
+        font-size: 8px;
+        min-width: 20px;
+        height: 20px;
+      }
+      
+      .panel {
+        padding: 12px;
+        gap: 8px;
+      }
+      
+      button, .btn {
+        padding: 10px 16px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <section class="main" aria-live="polite">
+      <div class="warning-text" id="warningTop">Don't touch the exam ...</div>
+      <div id="time" class="time" role="timer" aria-atomic="true">90:00</div>
+      <div class="status">
+        <span class="badge" id="toiletBadge" aria-live="polite" aria-atomic="true">
+          <span class="dot" aria-hidden="true"></span>
+            <svg id="toiletIcon" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+              <path d="M7 3h10v4a3 3 0 0 1-3 3H10a3 3 0 0 1-3-3V3z M4 10h16v4a6 6 0 0 1-6 6H10a6 6 0 0 1-6-6v-4z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+            </svg>
+          <span class="label">Toilet free</span>
+        </span>
+      </div>
+      <div class="warning-text" id="warningBottom">... or you will be excluded!</div>
+    </section>
+  </main>
+
+  <footer class="controls">
+    <div class="controls-inner">
+
+      <!-- Left panel: presets -->
+      <div class="panel" id="leftPanel" aria-label="Durations">
+        <span class="btn quiet" data-mins="60">60 min</span>
+        <span class="btn quiet" data-mins="90">90 min</span>
+        <span class="btn quiet" data-mins="120">120 min</span>
+        <label class="input" for="customMins">
+          <input id="customMins" type="number" min="1" max="999" step="1" value="90" inputmode="numeric" aria-label="Custom minutes" />
+          <span class="suffix">min</span>
+        </label>
+      </div>
+
+      <!-- Center controls: use the space between panels -->
+      <div class="center-controls" aria-hidden="false">
+      </div>
+
+      <!-- Right panel: reset + custom -->
+      <div class="panel" id="rightPanel" aria-label="Duration & Reset">
+        <button id="startPauseBtn" class="primary btn-with-shortcut" title="Start / Pause">
+          <span>Start</span>
+          <span class="kbd">Space</span>
+        </button>
+        <button id="toiletBtn" class="quiet btn-with-shortcut" title="Toggle Toilet">
+          <span>Toilet</span>
+          <span class="kbd">T</span>
+        </button>
+        <button id="resetBtn" class="btn quiet btn-with-shortcut" title="Reset timer">
+          <span>Reset</span>
+          <span class="kbd">R</span>
+        </button>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- Confirmation modal for Reset -->
+  <div id="confirmModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document">
+      <h3>Confirm reset</h3>
+      <p>Reset the timer to the configured duration and stop it? This cannot be undone.</p>
+      <div class="row">
+        <button id="cancelResetBtn" class="btn">Cancel</button>
+        <button id="confirmResetBtn" class="btn primary">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const timeEl   = document.getElementById('time');
+      const startBtn = document.getElementById('startPauseBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const toiletBtn= document.getElementById('toiletBtn');
+      const badge    = document.getElementById('toiletBadge');
+      const customIn = document.getElementById('customMins');
+      const presetButtons = Array.from(document.querySelectorAll('[data-mins]'));
+      const modal = document.getElementById('confirmModal');
+      const cancelResetBtn = document.getElementById('cancelResetBtn');
+      const confirmResetBtn = document.getElementById('confirmResetBtn');
+
+      let configuredMs = 90 * 60 * 1000; // default 90 minutes
+      let remainingMs  = configuredMs;
+      let lastTick     = null;
+      let timerId      = null;
+      let running      = false;
+      let finished     = false;
+      let occupied     = false;
+      let timerStarted = false; // Track if timer has been started
+      let startMessageTimeout = null; // Track the "You can start now!" timeout
+
+      function msToParts(ms){
+        const total = Math.max(0, Math.floor(ms/1000));
+        const h = Math.floor(total / 3600);
+        const m = Math.floor((total % 3600) / 60);
+        const s = total % 60;
+        return {h,m,s};
+      }
+
+      function format(ms){
+        const {h,m,s} = msToParts(ms);
+        const mm = String(m).padStart(2,'0');
+        const ss = String(s).padStart(2,'0');
+        return h>0 ? `${h}:${mm}:${ss}` : `${m}:${ss}`.replace(/^([0-9]):/,(m)=>'0'+m);
+      }
+
+      function updateDisplay(){
+        timeEl.textContent = format(remainingMs);
+        document.title = timeEl.textContent + ' — Exam Timer';
+      }
+
+      function setDuration(mins){
+        configuredMs = Math.max(1, Math.floor(mins)) * 60 * 1000;
+        remainingMs = configuredMs;
+        stop(false);
+        updateDisplay();
+        highlightPreset(mins);
+      }
+
+      function highlightPreset(mins){
+        presetButtons.forEach(b=>{
+          const isActive = Number(b.dataset.mins) === Number(mins);
+          b.style.outline = isActive ? '2px solid var(--accent)' : 'none';
+        });
+        
+        // Check if it's a custom duration (not matching any preset)
+        const isCustomDuration = !presetButtons.some(b => Number(b.dataset.mins) === Number(mins));
+        customIn.parentElement.style.outline = isCustomDuration ? '2px solid var(--accent)' : 'none';
+      }
+
+      function tick(){
+        const now = performance.now();
+        if(lastTick==null) lastTick = now;
+        const delta = now - lastTick;
+        lastTick = now;
+        remainingMs -= delta*20;
+        if(remainingMs <= 0){
+          remainingMs = 0; updateDisplay(); finish(); return;
+        }
+        updateDisplay();
+      }
+
+      function start(){
+        if(running) return;
+        
+        // Check if this is a fresh start (remainingMs equals configuredMs) or a resume
+        const isFreshStart = (remainingMs <= 0 || remainingMs === configuredMs) && !timerStarted;
+        
+        if(remainingMs <= 0) remainingMs = configuredMs;
+        lastTick = null;
+        timerId = setInterval(tick, 200);
+        running = true;
+        timerStarted = true;
+        startBtn.querySelector('span').textContent = 'Pause';
+        timeEl.classList.remove('flash');
+        startBtn.setAttribute('aria-pressed','true');
+        document.body.classList.add('hide-duration-controls');
+        
+        // Only show start message for fresh starts, not resumes
+        if(isFreshStart) {
+          document.getElementById('warningTop').textContent = 'You can start now!';
+          document.getElementById('warningBottom').textContent = 'You can start now!';
+          document.body.classList.remove('hide-warning');
+          document.body.classList.add('show-start-message');
+          
+          // Hide the message after 10 seconds
+          startMessageTimeout = setTimeout(() => {
+            document.body.classList.add('hide-warning');
+            document.body.classList.remove('show-start-message');
+          }, 10000);
+        } else {
+          // For resume, just ensure warning stays hidden
+          document.body.classList.add('hide-warning');
+          document.body.classList.remove('show-start-message');
+        }
+      }
+
+      function pause(){
+        if(!running) return;
+        clearInterval(timerId);
+        running = false;
+        startBtn.querySelector('span').textContent = 'Resume';
+        startBtn.setAttribute('aria-pressed','false');
+        // Clear any pending start message timeout
+        if(startMessageTimeout) {
+          clearTimeout(startMessageTimeout);
+          startMessageTimeout = null;
+        }
+        // Keep duration controls and warning hidden when paused
+        document.body.classList.add('hide-warning');
+        document.body.classList.remove('show-start-message');
+      }
+
+      function stop(announce=true){
+        clearInterval(timerId);
+        running = false;
+        finished = false;
+        timerStarted = false;
+        remainingMs = configuredMs;
+        startBtn.querySelector('span').textContent = 'Start';
+        startBtn.style.display = 'block';
+        startBtn.setAttribute('aria-pressed','false');
+        resetBtn.classList.remove('primary');
+        resetBtn.classList.add('quiet');
+        
+        // Clear any pending start message timeout
+        if(startMessageTimeout) {
+          clearTimeout(startMessageTimeout);
+          startMessageTimeout = null;
+        }
+        
+        // Restore original warning text
+        document.getElementById('warningTop').textContent = 'Don\'t touch the exam ...';
+        document.getElementById('warningBottom').textContent = '... or you will be excluded!';
+        document.body.classList.remove('show-start-message');
+        
+        updateDisplay();
+        if(announce) timeEl.classList.remove('flash');
+        document.body.classList.remove('hide-duration-controls');
+        document.body.classList.remove('hide-warning');
+      }
+
+      function finish(){
+        clearInterval(timerId);
+        running = false;
+        timerStarted = false;
+        finished = true;
+        startBtn.style.display = 'none';
+        resetBtn.classList.remove('quiet');
+        resetBtn.classList.add('primary');
+        timeEl.classList.add('flash');
+        
+        // Clear any pending start message timeout
+        if(startMessageTimeout) {
+          clearTimeout(startMessageTimeout);
+          startMessageTimeout = null;
+        }
+        document.body.classList.add('hide-warning');
+        document.body.classList.remove('show-start-message');
+      }
+
+      function toggle(){ finished ? stop() : running ? pause() : start(); }
+
+      function toggleToilet(){
+        occupied = !occupied;
+        badge.classList.toggle('occupied', occupied);
+        badge.querySelector('.label').textContent = occupied ? 'Toilet occupied' : 'Toilet free';
+        badge.setAttribute('aria-label', occupied ? 'Toilet occupied' : 'Toilet free');
+      }
+
+      // Modal helpers
+      function openModal(){
+        modal.style.display = 'flex';
+        modal.setAttribute('aria-hidden','false');
+        confirmResetBtn.focus();
+        document.body.style.overflow = 'hidden';
+      }
+      function closeModal(){
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden','true');
+        document.body.style.overflow = '';
+        resetBtn.focus();
+      }
+
+      // Wire up controls
+      startBtn.addEventListener('click', toggle);
+      toiletBtn.addEventListener('click', toggleToilet);
+      
+      // Validate and constrain custom input value
+      function validateCustomInput() {
+        let value = parseInt(customIn.value) || 90;
+        value = Math.max(1, Math.min(999, value)); // Constrain between 1 and 999
+        customIn.value = value;
+        return value;
+      }
+      
+      // Auto-apply custom duration on input change, focus, and click
+      customIn.addEventListener('input', ()=> {
+        const mins = validateCustomInput();
+        setDuration(mins);
+      });
+      customIn.addEventListener('focus', ()=> {
+        const mins = validateCustomInput();
+        setDuration(mins);
+      });
+      customIn.addEventListener('click', ()=> {
+        const mins = validateCustomInput();
+        setDuration(mins);
+      });
+      
+      // Also validate on blur to ensure value is corrected when user leaves the field
+      customIn.addEventListener('blur', ()=> {
+        validateCustomInput();
+      });
+      
+      presetButtons.forEach(btn=> btn.addEventListener('click', ()=>{
+        const mins = Number(btn.dataset.mins);
+        setDuration(mins);
+      }));
+
+      resetBtn.addEventListener('click', ()=> {
+        if (finished) {
+          stop(); // Reset immediately when finished
+        } else {
+          openModal(); // Show confirmation when running/paused
+        }
+      });
+      cancelResetBtn.addEventListener('click', ()=> closeModal());
+      confirmResetBtn.addEventListener('click', ()=>{ closeModal(); stop(); });
+
+      // Keyboard shortcuts: Space=start/pause, T=toilet, R=reset
+      window.addEventListener('keydown', (e)=>{
+        if(modal.getAttribute('aria-hidden') === 'false'){
+          if(e.key === 'Escape'){ e.preventDefault(); closeModal(); }
+          if(e.key === 'Enter'){ e.preventDefault(); confirmResetBtn.click(); }
+          return;
+        }
+        if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){
+          return;
+        }
+        if(e.key===' '){ e.preventDefault(); toggle(); }
+        if(e.key.toLowerCase()==='t'){ e.preventDefault(); toggleToilet(); }
+        if(e.key.toLowerCase()==='r'){ 
+          e.preventDefault(); 
+          if (finished) {
+            stop(); // Reset immediately when finished
+          } else {
+            openModal(); // Show confirmation when running/paused
+          }
+        }
+      });
+
+      // Initialize
+      updateDisplay();
+      highlightPreset(90);
+    })();
+  </script>
+</body>
+</html>
