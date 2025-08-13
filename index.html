@@ -54,8 +54,17 @@
       width: min(100%, 1400px);
     }
 
+    /* Sync timer and info panels width */
+    .time {
+      max-width: 800px;
+      width: 100%;
+      margin-left: auto;
+      margin-right: auto;
+      /* The value 800px should match the info-panels max-width below */
+    }
+
     .time{
-      font-size: clamp(160px, 14vw, 240px);
+      font-size: 160px;
       font-weight: 800;
       letter-spacing: -0.02em;
       line-height: 0.9;
@@ -80,11 +89,38 @@
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
     }
 
+    .info-panels {
+      display: flex;
+      gap: 24px;
+      width: 100%;
+      max-width: 866px; /* matches .time max-width above */
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .info-panel {
+      flex: 1;
+      background: var(--surface-elevated);
+      border-radius: var(--border-radius);
+      padding: 8px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(20px);
+    }
+    .info-panel .label {
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .info-panel .value {
+      font-size: 20px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
     .status{
       display:flex; 
       align-items:center; 
-      gap:16px; 
-      font-size: clamp(18px, 3.2vw, 28px); 
+      gap:16px;
+      font-size: 30px; 
       color: var(--muted);
       margin-top: 32px;
     }
@@ -255,6 +291,43 @@
       font-weight:600; 
       font-size: 14px;
     }
+        /* Announcement text field */
+    #announcementContainer {
+      width: 100%;
+      max-width: 866px;
+      margin: 32px auto 0 auto;
+      display: flex;
+      justify-content: center;
+    }
+    .announcement-text {
+      min-height: 40px;
+      width: 100%;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--fg);
+      background: var(--surface-elevated);
+      border-radius: var(--border-radius-lg);
+      border: 2px dashed var(--accent);
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+      outline: none;
+      padding: 24px 16px;
+      margin: 0 auto;
+      transition: border-color 0.2s;
+      word-break: break-word;
+      white-space: pre-line;
+    }
+    .announcement-text:empty:before {
+      content: 'Type announcement here...';
+      color: var(--muted);
+      font-weight: 400;
+      font-size: 40px;
+      opacity: 0.5;
+    }
+    .announcement-text:focus {
+      border-color: var(--accent);
+      background: var(--surface);
+    }
 
     /* Keyboard shortcut indicators */
     .btn-with-shortcut {
@@ -336,7 +409,7 @@
 
     /* Warning text */
     .warning-text {
-      font-size: clamp(64px, 2.8vw, 88px);
+      font-size: 64px;
       font-weight: 800;
       text-align: center;
       animation: colorPulse 2s infinite ease-in-out;
@@ -376,62 +449,6 @@
     .hide-duration-controls .controls-inner {
       justify-content: flex-start;
     }
-
-    @media (max-width:720px){
-      .controls-inner{ 
-        flex-direction:column; 
-        gap:16px; 
-        align-items:stretch; 
-      }
-      .panel{ 
-        justify-content:center; 
-      }
-      
-      .time {
-        font-size: clamp(120px, 20vw, 200px);
-        padding: 20px 24px;
-      }
-      
-      .warning-text {
-        font-size: clamp(48px, 8vw, 72px);
-      }
-      
-      .controls {
-        padding: 16px;
-      }
-      
-      .main {
-        gap: 24px;
-      }
-      
-      .container {
-        padding: 24px 16px;
-      }
-    }
-    
-    @media (max-width:480px){
-      .btn-with-shortcut {
-        gap: 4px;
-      }
-      
-      .kbd {
-        font-size: 8px;
-        min-width: 16px;
-        height: 16px;
-        padding: 1px 3px;
-      }
-      
-      .panel {
-        padding: 12px;
-        gap: 8px;
-      }
-      
-      button, .btn {
-        padding: 10px 16px;
-        font-size: 14px;
-        white-space: nowrap;
-      }
-    }
   </style>
 </head>
 <body>
@@ -439,6 +456,20 @@
     <section class="main" aria-live="polite">
       <div class="warning-text" id="warningTop">Don't touch the exam ...</div>
       <div id="time" class="time" role="timer" aria-atomic="true">90:00</div>
+      <div id="infoPanels" class="info-panels">
+        <div class="info-panel">
+          <div class="label">Start</div>
+          <div class="value" id="startTimeValue">--:--:--</div>
+        </div>
+        <div class="info-panel">
+          <div class="label">Duration</div>
+          <div class="value" id="durationValue">--:--:--</div>
+        </div>
+        <div class="info-panel">
+          <div class="label">End</div>
+          <div class="value" id="endTimeValue">--:--:--</div>
+        </div>
+      </div>
       <div class="status">
         <span class="badge" id="toiletBadge" aria-live="polite" aria-atomic="true">
           <span class="dot" aria-hidden="true"></span>
@@ -449,6 +480,16 @@
         </span>
       </div>
       <div class="warning-text" id="warningBottom">... or you will be excluded!</div>
+      <div id="announcementContainer">
+        <div
+          id="announcementText"
+          class="announcement-text"
+          contenteditable="true"
+          aria-label="Announcement text (editable)"
+          tabindex="0"
+        >Good luck!</div>
+      </div>
+
     </section>
   </main>
 
@@ -510,6 +551,10 @@
       const cancelResetBtn = document.getElementById('cancelResetBtn');
       const confirmResetBtn = document.getElementById('confirmResetBtn');
       
+      const startTimeValue = document.getElementById('startTimeValue');
+      const durationValue = document.getElementById('durationValue');
+      const endTimeValue = document.getElementById('endTimeValue');
+      
       let configuredMs = 90 * 60 * 1000; // default 90 minutes
       let remainingMs  = configuredMs;
       let lastTick     = null;
@@ -519,6 +564,10 @@
       let occupied     = false;
       let timerStarted = false; // Track if timer has been started
       let startMessageTimeout = null; // Track the "You can start now!" timeout
+
+
+      let examStartTime = null;
+      let examEndTime = null;
 
       window.deltaScale = 1;
 
@@ -536,6 +585,10 @@
         const mm = String(m).padStart(2,'0');
         const ss = String(s).padStart(2,'0');
         return `${hh}:${mm}:${ss}`;
+      }
+
+      function formatClock(date) {
+        return date ? date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'}) : '--:--:--';
       }
 
       function updateDisplay(){
@@ -562,41 +615,70 @@
         customIn.parentElement.style.outline = isCustomDuration ? '2px solid var(--accent)' : 'none';
       }
 
+      // Update info panels
+      function updateInfoPanels() {
+        startTimeValue.textContent = formatClock(examStartTime);
+        if (examStartTime && examEndTime) {
+          const durationMs = examEndTime - examStartTime;
+          durationValue.textContent = format(durationMs);
+          endTimeValue.textContent = formatClock(examEndTime);
+        } else {
+          durationValue.textContent = '--:--:--';
+          endTimeValue.textContent = '--:--:--';
+        }
+      }
+
       function tick(){
         const now = performance.now();
-        if(lastTick==null) lastTick = now;
+        if (lastTick == null) lastTick = now;
         const delta = now - lastTick;
+        let scaledDelta = window.deltaScale * delta
         lastTick = now;
-        remainingMs -= window.deltaScale * delta;
-        if(remainingMs <= 0){
-          remainingMs = 0; updateDisplay(); finish(); return;
+
+        if (running) {
+          remainingMs -= scaledDelta;
+          if (remainingMs <= 0) {
+            remainingMs = 0; updateDisplay(); finish(); return;
+          }
+        } else if (examEndTime) {
+          // If paused, push end time forward
+          examEndTime = new Date(examEndTime.getTime() + scaledDelta);
         }
         updateDisplay();
+        updateInfoPanels();
       }
 
       function start(){
         if(running) return;
-        
         // Check if this is a fresh start (remainingMs equals configuredMs) or a resume
         const isFreshStart = (remainingMs <= 0 || remainingMs === configuredMs) && !timerStarted;
-        
+
         if(remainingMs <= 0) remainingMs = configuredMs;
         lastTick = null;
-        timerId = setInterval(tick, 50);
+        if (!timerId) timerId = setInterval(tick, 50); // Only start if not already running
         running = true;
         timerStarted = true;
+
+        if (isFreshStart) {
+            const now = new Date();
+            now.setMilliseconds(0);
+            examStartTime = now;
+          examEndTime = new Date(examStartTime.getTime() + configuredMs);
+        }
+        updateInfoPanels();
+
         startBtn.querySelector('span').textContent = 'Pause';
         timeEl.classList.remove('flash');
         startBtn.setAttribute('aria-pressed','true');
         document.body.classList.add('hide-duration-controls');
-        
+
         // Only show start message for fresh starts, not resumes
         if(isFreshStart) {
           document.getElementById('warningTop').textContent = 'You can start now!';
           document.getElementById('warningBottom').textContent = 'You can start now!';
           document.body.classList.remove('hide-warning');
           document.body.classList.add('show-start-message');
-          
+
           // Hide the message after 10 seconds
           startMessageTimeout = setTimeout(() => {
             document.body.classList.add('hide-warning');
@@ -611,8 +693,8 @@
 
       function pause(){
         if(!running) return;
-        clearInterval(timerId);
         running = false;
+        // Do not clear timerId, so tick keeps running and end time keeps updating
         startBtn.querySelector('span').textContent = 'Resume';
         startBtn.setAttribute('aria-pressed','false');
         // Clear any pending start message timeout
@@ -627,27 +709,33 @@
 
       function stop(announce=true){
         clearInterval(timerId);
+        timerId = null;
         running = false;
         finished = false;
         timerStarted = false;
+
+        examStartTime = null;
+        examEndTime = null;
+        updateInfoPanels();
+
         remainingMs = configuredMs;
         startBtn.querySelector('span').textContent = 'Start';
         startBtn.style.display = 'block';
         startBtn.setAttribute('aria-pressed','false');
         resetBtn.classList.remove('primary');
         resetBtn.classList.add('quiet');
-        
+
         // Clear any pending start message timeout
         if(startMessageTimeout) {
           clearTimeout(startMessageTimeout);
           startMessageTimeout = null;
         }
-        
+
         // Restore original warning text
         document.getElementById('warningTop').textContent = 'Don\'t touch the exam ...';
         document.getElementById('warningBottom').textContent = '... or you will be excluded!';
         document.body.classList.remove('show-start-message');
-        
+
         updateDisplay();
         if(announce) timeEl.classList.remove('flash');
         document.body.classList.remove('hide-duration-controls');
@@ -656,6 +744,7 @@
 
       function finish(){
         clearInterval(timerId);
+        timerId = null;
         running = false;
         timerStarted = false;
         finished = true;
