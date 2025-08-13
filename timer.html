@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Exam Projector Timer</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23059669' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12,6 12,12 16,14'/%3E%3C/svg%3E">
   <style>
     :root{
       --bg: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
@@ -85,7 +86,7 @@
       gap:16px; 
       font-size: clamp(18px, 3.2vw, 28px); 
       color: var(--muted);
-      margin-top: -8px;
+      margin-top: 32px;
     }
 
     .badge{ 
@@ -496,7 +497,7 @@
     </div>
   </div>
 
-  <script>
+  <script id="timer-script">
     (function(){
       const timeEl   = document.getElementById('time');
       const startBtn = document.getElementById('startPauseBtn');
@@ -508,7 +509,7 @@
       const modal = document.getElementById('confirmModal');
       const cancelResetBtn = document.getElementById('cancelResetBtn');
       const confirmResetBtn = document.getElementById('confirmResetBtn');
-
+      
       let configuredMs = 90 * 60 * 1000; // default 90 minutes
       let remainingMs  = configuredMs;
       let lastTick     = null;
@@ -518,6 +519,8 @@
       let occupied     = false;
       let timerStarted = false; // Track if timer has been started
       let startMessageTimeout = null; // Track the "You can start now!" timeout
+
+      window.deltaScale = 1;
 
       function msToParts(ms){
         const total = Math.max(0, Math.floor(ms/1000));
@@ -564,7 +567,7 @@
         if(lastTick==null) lastTick = now;
         const delta = now - lastTick;
         lastTick = now;
-        remainingMs -= delta;
+        remainingMs -= window.deltaScale * delta;
         if(remainingMs <= 0){
           remainingMs = 0; updateDisplay(); finish(); return;
         }
@@ -579,7 +582,7 @@
         
         if(remainingMs <= 0) remainingMs = configuredMs;
         lastTick = null;
-        timerId = setInterval(tick, 200);
+        timerId = setInterval(tick, 50);
         running = true;
         timerStarted = true;
         startBtn.querySelector('span').textContent = 'Pause';
@@ -758,6 +761,15 @@
           } else {
             openModal(); // Show confirmation when running/paused
           }
+        }
+      });
+
+      // Prevent accidental page close when timer is running or paused
+      window.addEventListener('beforeunload', (e) => {
+        if (running || (timerStarted && !finished)) {
+          e.preventDefault();
+          e.returnValue = 'The exam timer is currently active. Are you sure you want to leave?';
+          return 'The exam timer is currently active. Are you sure you want to leave?';
         }
       });
 
