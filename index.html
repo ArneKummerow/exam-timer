@@ -54,21 +54,12 @@
       width: min(100%, 1400px);
     }
 
-    /* Sync timer and info panels width */
-    .time {
-      max-width: 800px;
-      width: 100%;
-      margin-left: auto;
-      margin-right: auto;
-      /* The value 800px should match the info-panels max-width below */
-    }
-
     .time{
       font-size: 160px;
       font-weight: 800;
-      letter-spacing: -0.02em;
+      letter-spacing: 0.05em;
       line-height: 0.9;
-      padding: 24px 32px;
+      padding: 30px 60px;
       border-radius: var(--border-radius-lg);
       background: var(--surface-elevated);
       box-shadow: var(--shadow-lg);
@@ -78,7 +69,7 @@
       position: relative;
       overflow: hidden;
     }
-    
+
     .time::before {
       content: '';
       position: absolute;
@@ -87,33 +78,6 @@
       right: 0;
       height: 1px;
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
-    }
-
-    .info-panels {
-      display: flex;
-      gap: 24px;
-      width: 100%;
-      max-width: 866px; /* matches .time max-width above */
-      margin-left: auto;
-      margin-right: auto;
-    }
-    .info-panel {
-      flex: 1;
-      background: var(--surface-elevated);
-      border-radius: var(--border-radius);
-      padding: 8px;
-      text-align: center;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(20px);
-    }
-    .info-panel .label {
-      font-size: 14px;
-      color: var(--muted);
-    }
-    .info-panel .value {
-      font-size: 20px;
-      font-weight: 600;
-      font-variant-numeric: tabular-nums;
     }
 
     .status{
@@ -178,6 +142,41 @@
       align-items:center; 
       gap:16px; 
       position:relative; 
+    }
+
+    /* Controls toggle button */
+    .controls-toggle {
+      position: fixed;
+      bottom: 26px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      background: var(--surface-elevated);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-lg);
+      backdrop-filter: blur(20px);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .controls-toggle:hover {
+      transform: translateX(-50%) scale(1.05);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .controls-toggle svg {
+      width: 20px;
+      height: 20px;
+      color: var(--fg);
+      transition: transform 0.3s ease;
     }
 
     .panel{ 
@@ -290,43 +289,6 @@
       color: var(--muted); 
       font-weight:600; 
       font-size: 14px;
-    }
-        /* Announcement text field */
-    #announcementContainer {
-      width: 100%;
-      max-width: 866px;
-      margin: 32px auto 0 auto;
-      display: flex;
-      justify-content: center;
-    }
-    .announcement-text {
-      min-height: 40px;
-      width: 100%;
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--fg);
-      background: var(--surface-elevated);
-      border-radius: var(--border-radius-lg);
-      border: 2px dashed var(--accent);
-      box-shadow: var(--shadow-lg);
-      text-align: center;
-      outline: none;
-      padding: 24px 16px;
-      margin: 0 auto;
-      transition: border-color 0.2s;
-      word-break: break-word;
-      white-space: pre-line;
-    }
-    .announcement-text:empty:before {
-      content: 'Type announcement here...';
-      color: var(--muted);
-      font-weight: 400;
-      font-size: 40px;
-      opacity: 0.5;
-    }
-    .announcement-text:focus {
-      border-color: var(--accent);
-      background: var(--surface);
     }
 
     /* Keyboard shortcut indicators */
@@ -449,36 +411,32 @@
     .hide-duration-controls .controls-inner {
       justify-content: flex-start;
     }
+
+    /* Hide controls functionality */
+    .controls {
+      transition: transform 0.3s ease-in-out;
+    }
+    
+    .hide-controls .controls {
+      transform: translateY(100%);
+    }
+
+    /* Rotate arrow when controls are visible (pointing up) */
+    .controls-toggle svg {
+      transform: rotate(0deg);
+    }
+
+    /* Arrow points down when controls are hidden */
+    .hide-controls .controls-toggle svg {
+      transform: rotate(180deg);
+    }
   </style>
 </head>
 <body>
   <main class="container">
     <section class="main" aria-live="polite">
-      <div class="warning-text" id="warningTop">Don't touch the exam ...</div>
+      <div class="warning-text" id="warningTop">Don't touch the exam!</div>
       <div id="time" class="time" role="timer" aria-atomic="true">90:00</div>
-      <div id="infoPanels" class="info-panels">
-        <div class="info-panel">
-          <div class="label">Start</div>
-          <div class="value" id="startTimeValue">--:--:--</div>
-        </div>
-        <div class="info-panel">
-          <div class="label">Duration</div>
-          <div class="value" id="durationValue">--:--:--</div>
-        </div>
-        <div class="info-panel">
-          <div class="label">End</div>
-          <div class="value" id="endTimeValue">--:--:--</div>
-        </div>
-      </div>
-      <div id="announcementContainer">
-        <div
-          id="announcementText"
-          class="announcement-text"
-          contenteditable="true"
-          aria-label="Announcement text (editable)"
-          tabindex="0"
-        >Good luck!</div>
-      </div>
       <div class="status">
         <span class="badge" id="toiletBadge" aria-live="polite" aria-atomic="true">
           <span class="dot" aria-hidden="true"></span>
@@ -488,7 +446,7 @@
           <span class="label">Toilet free</span>
         </span>
       </div>
-      <div class="warning-text" id="warningBottom">... or you will be excluded!</div>
+      <div class="warning-text" id="warningBottom">Don't touch the exam!</div>
 
     </section>
   </main>
@@ -512,6 +470,7 @@
         </button>
       </div>
 
+
       <!-- Duration controls -->
       <div class="panel" id="durationPanel" aria-label="Durations">
         <span class="btn quiet" data-mins="60">60 min</span>
@@ -526,6 +485,13 @@
     </div>
   </footer>
 
+  <!-- Controls toggle button (always visible at bottom) -->
+  <button id="showControlsBtn" class="controls-toggle" title="Toggle controls (H)" aria-label="Toggle controls">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 9l6 6 6-6"/>
+    </svg>
+  </button>
+    
   <!-- Confirmation modal for Reset -->
   <div id="confirmModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal" role="document">
@@ -550,10 +516,7 @@
       const modal = document.getElementById('confirmModal');
       const cancelResetBtn = document.getElementById('cancelResetBtn');
       const confirmResetBtn = document.getElementById('confirmResetBtn');
-      
-      const startTimeValue = document.getElementById('startTimeValue');
-      const durationValue = document.getElementById('durationValue');
-      const endTimeValue = document.getElementById('endTimeValue');
+      const showControlsBtn = document.getElementById('showControlsBtn');
       
       let configuredMs = 90 * 60 * 1000; // default 90 minutes
       let remainingMs  = configuredMs;
@@ -564,10 +527,7 @@
       let occupied     = false;
       let timerStarted = false; // Track if timer has been started
       let startMessageTimeout = null; // Track the "You can start now!" timeout
-
-
-      let examStartTime = null;
-      let examEndTime = null;
+      let controlsVisible = true; // Track if controls are visible
 
       window.deltaScale = 1;
 
@@ -585,10 +545,6 @@
         const mm = String(m).padStart(2,'0');
         const ss = String(s).padStart(2,'0');
         return `${hh}:${mm}:${ss}`;
-      }
-
-      function formatClock(date) {
-        return date ? date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'}) : '--:--:--';
       }
 
       function updateDisplay(){
@@ -615,19 +571,6 @@
         customIn.parentElement.style.outline = isCustomDuration ? '2px solid var(--accent)' : 'none';
       }
 
-      // Update info panels
-      function updateInfoPanels() {
-        startTimeValue.textContent = formatClock(examStartTime);
-        if (examStartTime && examEndTime) {
-          const durationMs = examEndTime - examStartTime;
-          durationValue.textContent = format(durationMs);
-          endTimeValue.textContent = formatClock(examEndTime);
-        } else {
-          durationValue.textContent = '--:--:--';
-          endTimeValue.textContent = '--:--:--';
-        }
-      }
-
       function tick(){
         const now = performance.now();
         if (lastTick == null) lastTick = now;
@@ -640,12 +583,8 @@
           if (remainingMs <= 0) {
             remainingMs = 0; updateDisplay(); finish(); return;
           }
-        } else if (examEndTime) {
-          // If paused, push end time forward
-          examEndTime = new Date(examEndTime.getTime() + scaledDelta);
         }
         updateDisplay();
-        updateInfoPanels();
       }
 
       function start(){
@@ -658,14 +597,6 @@
         if (!timerId) timerId = setInterval(tick, 50); // Only start if not already running
         running = true;
         timerStarted = true;
-
-        if (isFreshStart) {
-            const now = new Date();
-            now.setMilliseconds(0);
-            examStartTime = now;
-          examEndTime = new Date(examStartTime.getTime() + configuredMs);
-        }
-        updateInfoPanels();
 
         startBtn.querySelector('span').textContent = 'Pause';
         timeEl.classList.remove('flash');
@@ -714,10 +645,6 @@
         finished = false;
         timerStarted = false;
 
-        examStartTime = null;
-        examEndTime = null;
-        updateInfoPanels();
-
         remainingMs = configuredMs;
         startBtn.querySelector('span').textContent = 'Start';
         startBtn.style.display = 'block';
@@ -732,8 +659,8 @@
         }
 
         // Restore original warning text
-        document.getElementById('warningTop').textContent = 'Don\'t touch the exam ...';
-        document.getElementById('warningBottom').textContent = '... or you will be excluded!';
+        document.getElementById('warningTop').textContent = 'Don\'t touch the exam!';
+        document.getElementById('warningBottom').textContent = 'Don\'t touch the exam!';
         document.body.classList.remove('show-start-message');
 
         updateDisplay();
@@ -771,6 +698,11 @@
         badge.setAttribute('aria-label', occupied ? 'Toilet occupied' : 'Toilet free');
       }
 
+      function toggleControls(){
+        controlsVisible = !controlsVisible;
+        document.body.classList.toggle('hide-controls', !controlsVisible);
+      }
+
       // Modal helpers
       function openModal(){
         modal.style.display = 'flex';
@@ -788,6 +720,7 @@
       // Wire up controls
       startBtn.addEventListener('click', toggle);
       toiletBtn.addEventListener('click', toggleToilet);
+      showControlsBtn.addEventListener('click', toggleControls);
       
       // Validate and constrain custom input value
       function validateCustomInput() {
@@ -831,22 +764,19 @@
       cancelResetBtn.addEventListener('click', ()=> closeModal());
       confirmResetBtn.addEventListener('click', ()=>{ closeModal(); stop(); });
 
-      // Keyboard shortcuts: Space=start/pause, T=toilet, R=reset
-      function isAnnouncementActive() {
-        const ann = document.getElementById('announcementText');
-        return document.activeElement === ann || (ann && ann.contains(document.activeElement));
-      }
+      // Keyboard shortcuts: Space=start/pause, T=toilet, R=reset, H=hide/show controls
       window.addEventListener('keydown', (e)=>{
         if(modal.getAttribute('aria-hidden') === 'false'){
           if(e.key === 'Escape'){ e.preventDefault(); closeModal(); }
           if(e.key === 'Enter'){ e.preventDefault(); confirmResetBtn.click(); }
           return;
         }
-        if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName) || isAnnouncementActive()){
+        if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){
           return;
         }
         if(e.key===' '){ e.preventDefault(); toggle(); }
         if(e.key.toLowerCase()==='t'){ e.preventDefault(); toggleToilet(); }
+        if(e.key.toLowerCase()==='h'){ e.preventDefault(); toggleControls(); }
         if(e.key.toLowerCase()==='r'){ 
           e.preventDefault(); 
           if (finished) {
